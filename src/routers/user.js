@@ -8,7 +8,8 @@ router.post('/user', async(req,res) => {
 
     try{
         await user.save()               // if condition full fill
-        res.status(201).send(user)
+        const token = await user.generateAuthToken()
+        res.status(201).send({user, token})
     } catch (e) {                       // if condtion fail
         res.status(400).send(e)
     }
@@ -18,7 +19,9 @@ router.post('/user', async(req,res) => {
 router.post('/user/login', async(req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)        // to verify by email and password than give result
-        res.send(user)
+        const token = await user.generateAuthToken()                                // to provide token to only verified user
+        
+        res.send({user, token})
     } catch (e) {
         res.status(400).send()
     }

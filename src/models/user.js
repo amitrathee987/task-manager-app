@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator= require('validator')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 // use middleware mongoose to use hashpassword
 const userSchema = new mongoose.Schema( {
@@ -42,9 +43,26 @@ const userSchema = new mongoose.Schema( {
            }
        }
 
-   }
+   },
+   tokens: [{
+       token: {
+           type: String,
+           required: true
+       }
+   }]
 
 })
+
+//method
+userSchema.methods.generateAuthToken = async function () {
+    const user = this
+    const token = jwt.sign({_id: user._id.toString()}, 'thisisnew')
+    
+    user.tokens = user.tokens.concat({token})
+    await user.save()
+    
+    return token
+}
 
 //schema of login with email and password
 userSchema.statics.findByCredentials = async (email, password) => {
