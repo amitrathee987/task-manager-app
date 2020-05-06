@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema( {
    email:{                // required + validator,  both conditions must be full fill
        type: String,
        required: true,
+       unique: true,        // email will not repeat
        trim: true,
        lowercase:true,         // save only in lowercaer, if not than it automatically change and save it
        validate(value) {
@@ -45,7 +46,27 @@ const userSchema = new mongoose.Schema( {
 
 })
 
-// middleware method
+//schema of login with email and password
+userSchema.statics.findByCredentials = async (email, password) => {
+    const user = await User.findOne({email})
+
+    if (!user) {
+        throw new Error ('Unable to login')
+    }
+
+
+    const isMatch = await bcrypt.compare(password, user.password)
+
+    if (!isMatch) {
+     throw new Error ('Unable to login')
+}
+
+    return user
+}
+
+
+
+// hash the plain text password before saving
 userSchema.pre('save', async function (next) {    //two arguments which we want to pass, we cann't take arrow function becz it doesn't bind function
     const user = this
     

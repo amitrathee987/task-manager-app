@@ -14,6 +14,15 @@ router.post('/user', async(req,res) => {
     }
 })
 
+//loggin with email and password
+router.post('/user/login', async(req, res) => {
+    try {
+        const user = await User.findByCredentials(req.body.email, req.body.password)        // to verify by email and password than give result
+        res.send(user)
+    } catch (e) {
+        res.status(400).send()
+    }
+})
 // to get (find) all users data
 router.get('/user', async(req, res) => {
     try {                                       //if condition full fill 
