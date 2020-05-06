@@ -3,10 +3,25 @@ require('./db/mongoose')        // to ensure connection
 const userRouter = require('./routers/user')  // to take data form user.js
 const taskRouter = require('./routers/task')   // to take data form task.js
 
+
 // basic server structure
 const app = express()
 const port = process.env.PORT || 3000
 
+
+// // to stop only GET request
+// app.use((req,res,next) => {
+//     if (req.method === 'GET') {
+//         res.send('GET requests are disabled')
+//     } else {
+//         next()
+//     }
+// })
+
+// //  under maintenace(no function work)
+// app.use((req, res, next ) => {
+//     res.status(503).send('Site is under maintenance, come back coon!')
+// })
 // to pass json object data to handler
 app.use(express.json())
 
@@ -18,16 +33,19 @@ app.listen(port, () => {
     console.log('Server is up on port' + port)
 })
 
-const jwt = require('jsonwebtoken')
 
-const myFunction = async() => {
-    // to create sign in authentication
-    const token = jwt.sign({_id : 'abs' }, 'thisisnew', {expiresIn:'7 days'})  
-    console.log(token)
+// to find task
+const Task = require('./models/task')
+const User = require('./models/user')
 
-    // to verify user correctively authenticate
-    const data =jwt.verify(token, 'thisisnew')
-    console.log(data)
+const main = async () => {
+    // const task = await Task.findById('5eb29faf52d6652b28c947bd')
+    // await task.populate('owner').execPopulate()
+    // console.log(task.owner)
+
+    const user = await User.findById('5eb292cc14b61030343576f9')
+    await user.populate('tasks').execPopulate()
+    console.log(user.tasks)
 }
 
-myFunction()
+main()

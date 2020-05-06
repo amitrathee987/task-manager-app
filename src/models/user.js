@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator= require('validator')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const Task = require('./task')
 
 // use middleware mongoose to use hashpassword
 const userSchema = new mongoose.Schema( {
@@ -53,6 +54,23 @@ const userSchema = new mongoose.Schema( {
 
 })
 
+userSchema.virtual('tasks', {
+    ref:'Task',
+    localField: '_id',
+    foreignField: 'owner'
+})
+
+// to hide data
+userSchema.methods.toJSON = function () {
+    const user = this
+    const userObject = user.toObject()
+
+    delete userObject.password
+    delete userObject.tokens
+
+    return userObject
+}
+
 //method
 userSchema.methods.generateAuthToken = async function () {
     const user = this
@@ -94,6 +112,14 @@ userSchema.pre('save', async function (next) {    //two arguments which we want 
     }
     
     next()                              // if we don't next than function will not terminate
+})
+
+//delete user tasks when user is removed
+
+userSchema.pre('remove',async function(next) {
+    const user = this
+    await Task.deleteMany({owner: user._id})
+    next()
 })
 
 const User = mongoose.model('User',userSchema )           

@@ -1,12 +1,16 @@
 const express = require('express')
 const Task = require('../models/task')
+const auth = require('../middleware/auth')
 const router = new express.Router()
 
 
 // to post task data from client
-router.post('/task', async(req, res) => {
-    const task = new Task(req.body)
+router.post('/task',auth,  async(req, res) => {
 
+    const task = new Task({
+        ...req.body,
+        owner: req.user._id
+    })
     try {
         
         await task.save()           // if condition full fill
@@ -20,9 +24,9 @@ router.post('/task', async(req, res) => {
 
 // to get(fatch) all tasks
 
-router.get('/task', async(req, res) => {
+router.get('/tasks', auth, async(req, res) => {
     try {
-        const tasks = await Task.find({})
+        const tasks = await Task.find({owner: req.user._id})
         res.send(tasks)
     } catch (e) {
         res.status(500).send(e)
@@ -31,11 +35,11 @@ router.get('/task', async(req, res) => {
 
 
 // to get(fatch ) one task by id
-router.get('/task/:id',async(req, res) => {
+router.get('/task/:id', auth, async(req, res) => {
     const _id = req.params.id
 
     try {
-        const task = await Task.findById(_id)
+        const task = await Task.findOne({_id, owner:req.user._id})
 
         if (!task) {
             return res.status(404).send()
@@ -50,7 +54,7 @@ router.get('/task/:id',async(req, res) => {
 
 
 // patch is used to update
-router.patch('/task/:id', async(req,res) => {
+router.patch('/task/:id', auth, async(req,res) => {
     const updates =  Object.keys(req.body)                  // req body keys which we want update
     const allowedUpdates = ['task', 'completed']      // specify which we can update
     const isValidOperation = updates.every((update) => {
@@ -61,18 +65,16 @@ router.patch('/task/:id', async(req,res) => {
         }
 
     try {  
-        const task = await Task.findById(req.params.id)
-
-        updates.forEach((update) => {
-            task[update] = req.body[update]
-            
-        })
-        await task.save()                                                             // first find then update if all the validation conditions true
-        //const task = await Task.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
+        const task = await Task.findOne({_id: req.params.id, owner: req.user._id})
 
         if (!task) {
             return res.status(404).send()
         }
+
+        updates.forEach((update) => {
+        task[update] = req.body[update]
+        })
+        await task.save()                                                                
 
         res.send(task)
     } catch (e) {                           // if conditions fail
@@ -82,9 +84,9 @@ router.patch('/task/:id', async(req,res) => {
 
 
 // delete task by id
-router.delete('/task/:id', async(req, res) => {
+router.delete('/task/:id',auth, async(req, res) => {
     try {
-        const task = await Task.findByIdAndDelete(req.params.id)
+        const task = await Task.findOneAndDelete({_id: req.params.id, owner:req.user._id})
 
         if (!task) {
             return res.status(404).send()

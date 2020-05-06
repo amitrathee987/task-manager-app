@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 
 // basic structure
-const datastore = mongoose.model('datastore', {
+const Task = mongoose.model('Task', {
     task: {                 
        type : String,
        required: true,      //required, if only required implies on name than name must have a string
@@ -12,7 +12,12 @@ const datastore = mongoose.model('datastore', {
        completed : { 
            type: Boolean,
            default: false,
+   },
+   owner: {
+       type: mongoose.Schema.Types.ObjectId,
+       required:true,
+       ref: 'User' 
    }
 })
 
-module.exports = datastore
+module.exports = Task

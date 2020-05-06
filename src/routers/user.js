@@ -1,5 +1,6 @@
 const express = require('express')
 const User = require('../models/user')
+const auth = require('../middleware/auth')
 const router = new express.Router()
 
 // to post user data from client
@@ -14,50 +15,55 @@ router.post('/user', async(req,res) => {
         res.status(400).send(e)
     }
 })
-
 //loggin with email and password
 router.post('/user/login', async(req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)        // to verify by email and password than give result
         const token = await user.generateAuthToken()                                // to provide token to only verified user
         
-        res.send({user, token})
+        res.send({ user, token})
     } catch (e) {
         res.status(400).send()
     }
 })
-// to get (find) all users data
-router.get('/user', async(req, res) => {
-    try {                                       //if condition full fill 
-        const users = await User.find({})       // to find in user data
-        res.send(users)
-    } catch (e) {                               // if condition fail
-        res.status(500).send(e)
+
+
+// log out 
+router.post('/user/logout', auth, async(req, res) => {
+    try {
+        req.user.tokens = req.user.token.filter((token) => {        // only in which we logout not in other operator
+            return token.token !== req.token    
+        })
+        await req.user.save()
+        
+        res.send()
+    } catch (e) {
+        res.status(500).send()
+    }
+})
+    
+
+// log out from all operators
+router.post('/user/logoutAll', auth, async(req, res) => {
+    try {
+        req.user.tokens = []        // logout from all operators
+        await req.user.save()
+        
+        res.status(200).send()
+    } catch (e) {
+        res.status(500).send()
     }
 })
 
-
-// to get (find) selective users data
-router.get('/user/:id', async(req, res) => {
-     const _id = req.params.id
-
-     try {
-         const user = await User.findById(_id)  // if condition full fill
-
-         if (!user) {                            // id user id doesn't match with data , then it run
-             return res.status(404).send()
-         }
-
-            res.status(201).send(user)              // if user id is match then it run
-
-     } catch (e) {                              //   if condition fail
-            res.status(500).send(e)
-     }     
+// to see only his profile
+router.get('/user/me',auth, async(req, res) => {        
+    res.send(req.user)                                              
 })
 
 
+
 // patch is used to update
-router.patch('/user/:id', async(req,res) => {
+router.patch('/user/me', auth, async(req,res) => {
     const updates =  Object.keys(req.body)                  // req body keys which we want update
     const allowedUpdates = ['name', 'email', 'password', 'age']      // specify which we can update
     const isValidOperation = updates.every((update) => {
@@ -67,21 +73,14 @@ router.patch('/user/:id', async(req,res) => {
             return res.status(404).send({error: ' Invalid updates!'})       // if update doesn't match
         }
 
-    try {                                                               // first find then update if all the validation conditions true
-        const user = await User.findById(req.params.id)
-
-        updates.forEach((update) => {
-            user[update] = req.body[update]
+    try {                                                               
+            updates.forEach((update) => {
+            req.user[update] = req.body[update]
             
         })
-        await user.save()
-        //const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
-
-        if (!user) {
-            return res.status(404).send()
-        }
-
-        res.send(user)
+        await req.user.save()
+       
+        res.send(req.user)
     } catch (e) {                           // if conditions fail
         res.status(400).send(e)
     }
@@ -89,15 +88,10 @@ router.patch('/user/:id', async(req,res) => {
 
 
 // delete user by id
-router.delete('/user/:id', async(req, res) => {
+router.delete('/user/me',auth, async(req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id)    // find one id and delete
-
-        if (!user) {                                    //if user id doesn't match
-            return res.status(404).send()
-        }
-
-        res.send(user)                          // if id match
+        await req.user.remove()
+        res.send(req.user)                          // if id match
     }catch (e) {
         res.status(500).send(e)             // if condition fail
     }
