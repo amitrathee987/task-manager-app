@@ -15,7 +15,7 @@ router.post('/user', async(req,res) => {
         res.status(400).send(e)
     }
 })
-//loggin with email and password
+//login with email and password
 router.post('/user/login', async(req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)        // to verify by email and password than give result
@@ -31,10 +31,10 @@ router.post('/user/login', async(req, res) => {
 // log out 
 router.post('/user/logout', auth, async(req, res) => {
     try {
-        req.user.tokens = req.user.token.filter((token) => {        // only in which we logout not in other operator
+        req.user.tokens = req.user.token.filter((token) => {        // only in  which we logout, not in other operator
             return token.token !== req.token    
         })
-        await req.user.save()
+        await req.user.save( )
         
         res.send()
     } catch (e) {
@@ -46,7 +46,7 @@ router.post('/user/logout', auth, async(req, res) => {
 // log out from all operators
 router.post('/user/logoutAll', auth, async(req, res) => {
     try {
-        req.user.tokens = []        // logout from all operators
+        req.user.tokens = [ ]        // logout from all operators
         await req.user.save()
         
         res.status(200).send()

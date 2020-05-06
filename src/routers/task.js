@@ -23,11 +23,34 @@ router.post('/task',auth,  async(req, res) => {
 
 
 // to get(fatch) all tasks
-
+//url code are- GET /tasks?completed=true
+//              GET /tasks?limit=10&skip=10
+//              GET /tasks?sortBy=createdAt:desc or GET /tasks?sortBy=completed:desc
 router.get('/tasks', auth, async(req, res) => {
+    const match = {}  
+    const sort ={}
+                                  // to query to data, completed or not
+    if (req.query.completed) {
+        match.completed = req.query.completed === 'true'        
+    }
+
+    if (req.query.sortBy) {
+        const parts = req.query.sortBy.split(':')
+        sort[parts[0]] = parts[1] === 'desc' ? -1 : 1    
+    }
+    
     try {
-        const tasks = await Task.find({owner: req.user._id})
-        res.send(tasks)
+        await req.user.populate({
+          path: 'tasks',
+          match,
+          options: {
+              limit: parseInt(req.query.limit),    //pagination, number of items in one page
+              skip: parseInt(req.query.skip),       // pagination, skip number of items 
+            sort
+            }                            
+        }).execPopulate()
+        res.send(req.user.tasks)
+
     } catch (e) {
         res.status(500).send(e)
     }
