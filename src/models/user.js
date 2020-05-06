@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const validator= require('validator')
+const bcrypt = require('bcrypt')
 
-
-// basic structure
-const User = mongoose.model('User', {
+// use middleware mongoose to use hashpassword
+const userSchema = new mongoose.Schema( {
     name: {                 
        type : String,
        required: true,      //required, if only required implies on name than name must have a string
@@ -42,6 +42,21 @@ const User = mongoose.model('User', {
        }
 
    }
-})           
+
+})
+
+// middleware method
+userSchema.pre('save', async function (next) {    //two arguments which we want to pass, we cann't take arrow function becz it doesn't bind function
+    const user = this
+    
+    //console.log('something else')
+    if (user.isModified('password')) {
+        user.password = await bcrypt.hash(user.password, 8)
+    }
+    
+    next()                              // if we don't next than function will not terminate
+})
+
+const User = mongoose.model('User',userSchema )           
 
 module.exports = User

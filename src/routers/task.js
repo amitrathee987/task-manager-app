@@ -8,6 +8,7 @@ router.post('/task', async(req, res) => {
     const task = new Task(req.body)
 
     try {
+        
         await task.save()           // if condition full fill
         res.send(task)
     } catch (e) {
@@ -59,8 +60,15 @@ router.patch('/task/:id', async(req,res) => {
             return res.status(404).send({error: ' Invalid updates!'})       // if update doesn't match
         }
 
-    try {                                                               // first find then update if all the validation conditions true
-        const task = await Task.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
+    try {  
+        const task = await Task.findById(req.params.id)
+
+        updates.forEach((update) => {
+            task[update] = req.body[update]
+            
+        })
+        await task.save()                                                             // first find then update if all the validation conditions true
+        //const task = await Task.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
 
         if (!task) {
             return res.status(404).send()
