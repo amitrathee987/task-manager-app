@@ -23,6 +23,8 @@ const port = process.env.PORT || 3000
 //     res.status(503).send('Site is under maintenance, come back coon!')
 // })
 // to pass json object data to handler
+ 
+
 app.use(express.json())
 
 app.use(userRouter)   
@@ -34,18 +36,3 @@ app.listen(port, () => {
 })
 
 
-// to find task
-const Task = require('./models/task')
-const User = require('./models/user')
-
-const main = async () => {
-    // const task = await Task.findById('5eb29faf52d6652b28c947bd')
-    // await task.populate('owner').execPopulate()
-    // console.log(task.owner)
-
-    const user = await User.findById('5eb292cc14b61030343576f9')
-    await user.populate('tasks').execPopulate()
-    console.log(user.tasks)
-}
-
-main()

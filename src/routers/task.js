@@ -22,6 +22,7 @@ router.post('/task',auth,  async(req, res) => {
 
 
 
+
 // to get(fatch) all tasks
 //url code are- GET /tasks?completed=true
 //              GET /tasks?limit=10&skip=10
@@ -29,11 +30,11 @@ router.post('/task',auth,  async(req, res) => {
 router.get('/tasks', auth, async(req, res) => {
     const match = {}  
     const sort ={}
-                                  // to query to data, completed or not
-    if (req.query.completed) {
-        match.completed = req.query.completed === 'true'        
+    
+    if (req.query.completed) {                          //filtering- to query to data, completed or not
+        match.completed = req.query.completed === 'true'       
     }
-
+    
     if (req.query.sortBy) {
         const parts = req.query.sortBy.split(':')
         sort[parts[0]] = parts[1] === 'desc' ? -1 : 1    
@@ -41,15 +42,18 @@ router.get('/tasks', auth, async(req, res) => {
     
     try {
         await req.user.populate({
-          path: 'tasks',
-          match,
-          options: {
-              limit: parseInt(req.query.limit),    //pagination, number of items in one page
-              skip: parseInt(req.query.skip),       // pagination, skip number of items 
+        path: 'tasks',
+        match,
+        options: {
+            limit: parseInt(req.query.limit),    //pagination, number of items in one page
+            skip: parseInt(req.query.skip),       // pagination, skip number of items 
             sort
-            }                            
+            } ,
+                                     
         }).execPopulate()
-        res.send(req.user.tasks)
+        
+        
+        res.send({user:req.user.tasks, length: req.user.tasks.length, count: req.query.completed })
 
     } catch (e) {
         res.status(500).send(e)
