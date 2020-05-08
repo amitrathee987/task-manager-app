@@ -6,7 +6,7 @@ const taskRouter = require('./routers/task')   // to take data form task.js
 
 // basic server structure
 const app = express()
-const port = process.env.PORT || 3000
+const port = process.env.PORT
 
 
 // // to stop only GET request

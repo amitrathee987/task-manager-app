@@ -2,6 +2,7 @@ const express = require('express')
 const multer = require('multer')        // to upload files
 const sharp = require('sharp')          // to resize and change into other format
 const User = require('../models/user')
+const {sendWelcomeEmail, sendCancelEmail} = require('../email/account.js')
 const auth = require('../middleware/auth')
 const router = new express.Router()
 
@@ -11,6 +12,7 @@ router.post('/user', async(req,res) => {
 
     try{
         await user.save()               // if condition full fill
+       sendWelcomeEmail(user.email,user.name)
         const token = await user.generateAuthToken()
         res.status(201).send({user, token})
     } catch (e) {                       // if condtion fail
@@ -142,6 +144,7 @@ router.delete('/user/me/avatar', auth, async(req, res) => {
 router.delete('/user/me',auth, async(req, res) => {
     try {
         await req.user.remove()
+       sendCancelEmail(req.user.email, req.user.name)
         res.send(req.user)                          // if id match
     }catch (e) {
         res.status(500).send(e)             // if condition fail
